@@ -1,0 +1,11 @@
+<launch>
+  <node pkg="synchronized_throttle" type="synchronized_throttle">
+    <rosparam>
+      - in_topic_0: /camera/color/image_raw
+      - out_topic_0: /camera/color_t/image_raw
+      - in_topic_1: /camera/depth/image_rect_raw
+      - out_topic_1: /camera/depth_t/image_rect_raw
+      - rate: 5.0
+    </rosparam>
+  </node>
+</launch>

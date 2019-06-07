@@ -1,0 +1,64 @@
+#!/usr/bin/env python3
+
+# Synchronized throttling of 2 ROS topics.
+
+import random
+import rospy
+import rostopic
+import time
+
+class SynchronizedThrottleNode(object):
+    def __init__(self):
+        rospy.init_node("synchronized_throttle", anonymous = True)
+
+        self.param_in_topic_0 = rospy.get_self.param("~in_topic_0")
+        self.param_out_topic_0 = rospy.get_self.param("~out_topic_0", self.param_in_topic_0 + "_throttle")
+        self.param_in_topic_1 = rospy.get_self.param("~in_topic_1")
+        self.param_out_topic_1 = rospy.get_self.param("~out_topic_1", self.param_in_topic_1 + "_throttle")
+        self.param_throttle_rate = rospy.get_self.param("~throttle_rate", 5.0)
+        self.param_max_time_diff = rospy.get_self.param("~max_time_diff", 1e-6)
+            
+        msg_class_0, real_topic_0, msg_eval_0 = rostopic.get_topic_class(self.param_in_topic_0, blocking = True)
+        msg_class_1, real_topic_1, msg_eval_1 = rostopic.get_topic_class(self.param_in_topic_1, blocking = True)
+
+        self.last_0_msg = None
+        self.last_0_timestamp = None
+        self.last_1_msg = None
+        self.last_1_timestamp = None
+        self.last_publish_time = 0
+
+        self.pub_0 = rospy.Publisher(self.param_out_topic_0, msg_class_0, queue_size = 1)
+        self.pub_1 = rospy.Publisher(self.param_out_topic_1, msg_class_1, queue_size = 1)
+
+        self.sub_0 = rospy.Subscriber(self.param_in_topic_0, msg_class_0, on_topic_0)
+        self.sub_1 = rospy.Subscriber(self.param_in_topic_1, msg_class_1, on_topic_1)
+
+    def on_topic_0(self, msg):
+        self.last_0_msg = msg
+        self.last_0_timestamp = msg.header.stamp
+        self.throttle_publish()
+
+    def on_topic_1(self, msg):
+        self.last_1_msg = msg
+        self.last_1_timestamp = msg.header.stamp
+        self.throttle_publish()
+
+    def throttle_publish(self):
+        t = rospy.get_time()
+
+        if self.last_0_timestamp is None or self.last_1_timestamp is None:
+            return
+
+        if t - last_time > 1/THROTTLE_RATE:
+            if abs(self.last_1_timestamp.secs + self.last_1_timestamp.nsecs/1e9 - self.last_0_timestamp.secs - self.last_0_timestamp.nsecs/1e9) <= self.param_max_time_diff:
+                self.pub_0.publish(self.last_0_msg)
+                self.pub_1.publish(self.last_1_msg)
+                self.last_publish_time = t
+
+    def spin():
+        rospy.spin()
+
+if __name__ == "__main__":
+    node = SynchronizedThrottleNode()
+    node.spin()
+
